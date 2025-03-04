@@ -1,5 +1,5 @@
 # Andrew Richardet
-![alt text](image.png)
+![Alt text]("C:/Users/Andrew/Pictures/Github/Resume/University-of-Missouri.jpg")
 Education:
 **Univeristy of Missouri**: https://missouri.edu/
 
