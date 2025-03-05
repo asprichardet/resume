@@ -47,13 +47,117 @@ I am a Hydrologist with a strong background in hydrological modeling, spatial da
 ## Code Samples
 
 ```python
-# Example Python Code (e.g., from your flood_risk_analysis)
+import numpy as np
 import pandas as pd
+import os
 import geopandas as gpd
+import xarray as xr
+from pathlib import Path
+import pyemu
+import shutil
+import pyproj
+import rasterio as rio
+from rasterio.merge import merge
+import matplotlib.pyplot as plt
+from matplotlib import colors
+from scipy.io import netcdf
+import rioxarray as rxr
+import matplotlib.patches as mpatches
+from pyproj import Transformer, Proj, transform, CRS
+from rasterio.mask import mask
+from shapely.geometry import box
 
-# Load spatial data
-gdf = gpd.read_file("data/flood_data.shp")
+# File directories
+o_dir = Path('../model_files/swb_out')
+compare_dir = Path('../comparison_data')
+gis_dir = Path( '../model_files/rasters')
+data_dir = Path(o_dir)
+export_dir = Path('../comparison_data/swb_output_sums')
 
-# Perform analysis...
-# ...
-print(gdf.head())
+
+#get rows, and columns from subset ascii files
+asc_lines = open(os.path.join(gis_dir,'AWC_subset.asc'), "r").readlines()
+col = int(asc_lines[0].split()[1])
+row = int(asc_lines[1].split()[1])
+file_extension = f'__1995-01-01_to_1995-12-31__{row}_by_{col}.nc'
+model_name = 'michigan_daymet_'
+
+# SWB file names
+recharge = data_dir / f"{model_name}net_infiltration{file_extension}"
+irr = data_dir / f"{model_name}irrigation{file_extension}"
+gross_prcp = data_dir / f"{model_name}gross_precipitation{file_extension}"
+et = data_dir / f"{model_name}actual_et{file_extension}"
+
+# Extras to look at
+rej_rech = data_dir / f"{model_name}rejected_net_infiltration{file_extension}"
+run = data_dir / f"{model_name}runoff{file_extension}"
+rain = f"{model_name}rainfall{file_extension}"
+
+if os.path.exists(Path('../model_files/MIBoundaryFiles/upstream_basins')):
+    pass
+else:
+    os.mkdir(Path('../model_files/MIBoundaryFiles/upstream_basins'))
+                  
+
+#Obtaining upstream basins &  grids
+site1 = '04117500' #Thornapple Hastings
+site2 = '04117004' #Thronapple Caledonia
+site3 = '04118000' #Quaker Brook
+
+thornapple_hasting_basin = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site1}')
+thornapple_hasting_basin.to_file(Path('../model_files/MIBoundaryFiles/upstream_basins/thornapple_hastings_basin.shp'))
+
+thornapple_caledonia_basin = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site3}')
+thornapple_caledonia_basin.to_file(Path('../model_files/MIBoundaryFiles/upstream_basins/thornapple_caledonia_basin.shp'))
+
+quaker_brook_basin = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site2}')
+quaker_brook_basin.to_file(Path('../model_files/MIBoundaryFiles/upstream_basins/quaker_brook_basin.shp'))
+
+
+def get_basin_components():
+    component_list = []
+    datum_list = [recharge, irr, gross_prcp, et, rej_rech, run, rain]
+    bndry_f = [f for f in os.listdir(os.path.join('..','model_files','MIBoundaryFiles','upstream_basins')) if f.endswith('basin.shp')]
+    for datum in datum_list:
+            component = xr.load_dataset(datum, decode_times = True)
+            component = component.resample(time = 'M').mean()
+            datum = component
+            component_list.append(datum)
+            
+    for bndry_name in bndry_f:
+        bndry = gpd.read_file(os.path.join('..','model_files','MIBoundaryFiles','upstream_basins',bndry_name))
+        bndry.to_crs(crs = 'epsg:5070', inplace = True)
+        x_grid, y_grid = np.meshgrid(component['x'], component['y'])
+        x_coords = x_grid.flatten()
+        y_coords = y_grid.flatten()
+        grid_centroids_array = [shapely.geometry.Point(x, y) for x, y in zip(x_coords, y_coords)]
+
+        grid_centroids = gpd.GeoDataFrame(geometry = grid_centroids_array)
+
+        grid_centroids_basin = grid_centroids.clip(bndry)
+        grid_centroids_basin.reset_index(drop = True, inplace= True)
+
+        # grid_centroids_basin.to_file(os.path.join('..','model_files','MIBoundaryFiles','upstream_basins','swb_centroids.shp'), index = False)
+        
+        # grid_centroids_basin = gpd.read_file(os.path.join('..','model_files','MIBoundaryFiles','upstream_basins','swb_centroids.shp'))
+        
+        basinwide_component_coord = []
+        for coordinate in grid_centroids_basin['geometry']:
+            component_at_coord = []
+            for component in component_list:
+                data_variable = list(component.data_vars)[0]
+                        
+                value = component[data_variable].loc[component['time'],np.float64(coordinate.y),np.float64(coordinate.x)].values
+                value = (value/12)*(10763910.41671) #Converting from inches of wb component to cubic feet
+                component_at_coord.append(value)
+            basinwide_component_coord.append(component_at_coord)
+            
+        basinwide_array = np.array(basinwide_component_coord)
+        basinwide_array = basinwide_array.sum(axis = 0)
+        basinwide_array = np.swapaxes(basinwide_array, 0, 1)
+
+        basin_dataframe = pd.DataFrame(basinwide_array)
+        basin_dataframe.columns = ['net_infiltration','irrigation','gross_precipitation','actual_et','rejected_net_infiltration','runoff','rainfall']
+        basin_dataframe.insert(0, 'time', pd.Series(component['time']))
+
+        basin_dataframe.to_csv(f'../model_files/{bndry_name.rstrip('.shp')}.csv', index = False)
