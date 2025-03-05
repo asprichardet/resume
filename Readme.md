@@ -27,7 +27,7 @@ I am a Hydrologist with a strong background in hydrological modeling, spatial da
 * **Key Techniques:** GIS cartographic principles.
 
 ## Code Samples
-
+**Creating a function to sample water balance components from a NetCDF file in the area of an upstream basin:**
 ```python
 import numpy as np
 import pandas as pd
