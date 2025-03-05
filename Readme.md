@@ -11,38 +11,20 @@ I am a Hydrologist with a strong background in hydrological modeling, spatial da
 
 **Key Skills:**
 
-* Python (Pandas, NumPy, Scikit-learn, GeoPandas)
+* Python (Pandas, NumPy, SciPy, GeoPandas, Rasterio, Xarray)
 * Geographic Information Systems (ArcGIS, QGIS)
-* Hydrological Modeling
+* Watershed Modeling
 * Spatial Data Analysis
 * Data Visualization
-* Statistical Analysis
 
 ## Featured Projects
 
-### 2. Classifying New Mexico Watershed Health by Stream Impairment
+### 1. Classifying New Mexico Watershed Health by Stream Impairment
 
-[![Flood Risk Analysis Image](Images/PresentationSample-RichardetAndrew.jpg)](flood_risk_analysis/README.md)
+[![Watershed Analysis Image](Images/PresentationSample-RichardetAndrew.jpg)](flood_risk_analysis/README.md)
 
 * **Description:** An analysis of stream health in New Mexico according to the Clean Water Act.
 * **Key Techniques:** GIS cartographic principles.
-* **[Link to Project Details](flood_risk_analysis/README.md)**
-
-### 2. Groundwater Modeling and Visualization
-
-[![Groundwater Modeling Image](images/groundwater_level_map_thumbnail.png)](groundwater_modeling/README.md)
-
-* **Description:** Development of a groundwater model to assess [Specific Goal].
-* **Key Techniques:** Groundwater modeling, data visualization, Jupyter Notebooks.
-* **[Link to Project Details](groundwater_modeling/README.md)**
-
-### 3. Spatial Data Visualization and Analysis
-
-[![Spatial Analysis Image](images/spatial_analysis_map_thumbnail.png)](spatial_data_visualization/README.md)
-
-* **Description:** Interactive map creation and spatial data analysis for [Specific Purpose].
-* **Key Techniques:** Spatial data manipulation, interactive map creation, Python (GeoPandas, Folium).
-* **[Link to Project Details](spatial_data_visualization/README.md)**
 
 ## Code Samples
 
@@ -93,31 +75,31 @@ rej_rech = data_dir / f"{model_name}rejected_net_infiltration{file_extension}"
 run = data_dir / f"{model_name}runoff{file_extension}"
 rain = f"{model_name}rainfall{file_extension}"
 
-if os.path.exists(Path('../model_files/MIBoundaryFiles/upstream_basins')):
+if os.path.exists(Path('../model_files/boundary_files/upstream_basins')):
     pass
 else:
-    os.mkdir(Path('../model_files/MIBoundaryFiles/upstream_basins'))
+    os.mkdir(Path('../model_files/boundary_files/upstream_basins'))
                   
 
 #Obtaining upstream basins &  grids
-site1 = '04117500' #Thornapple Hastings
-site2 = '04117004' #Thronapple Caledonia
-site3 = '04118000' #Quaker Brook
+site1 = '04117500' #Basin 1
+site2 = '04117004' #Basin 2
+site3 = '04118000' #Basin 3
 
-thornapple_hasting_basin = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site1}')
-thornapple_hasting_basin.to_file(Path('../model_files/MIBoundaryFiles/upstream_basins/thornapple_hastings_basin.shp'))
+basin_1 = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site1}')
+basin_1.to_file(Path('../model_files/boundary_files/upstream_basins/basin_1.shp'))
 
-thornapple_caledonia_basin = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site3}')
-thornapple_caledonia_basin.to_file(Path('../model_files/MIBoundaryFiles/upstream_basins/thornapple_caledonia_basin.shp'))
+basin_2 = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site3}')
+basin_2.to_file(Path('../model_files/boundary_files/upstream_basins/basin_2.shp'))
 
-quaker_brook_basin = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site2}')
-quaker_brook_basin.to_file(Path('../model_files/MIBoundaryFiles/upstream_basins/quaker_brook_basin.shp'))
+basin_3 = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site2}')
+basin_3.to_file(Path('../model_files/boundary_files/upstream_basins/basin_3.shp'))
 
 
-def get_basin_components():
+def get_waterbalance_components():
     component_list = []
     datum_list = [recharge, irr, gross_prcp, et, rej_rech, run, rain]
-    bndry_f = [f for f in os.listdir(os.path.join('..','model_files','MIBoundaryFiles','upstream_basins')) if f.endswith('basin.shp')]
+    bndry_f = [f for f in os.listdir(os.path.join('..','model_files','boundary_files','upstream_basins')) if f.endswith('basin.shp')]
     for datum in datum_list:
             component = xr.load_dataset(datum, decode_times = True)
             component = component.resample(time = 'M').mean()
@@ -125,7 +107,7 @@ def get_basin_components():
             component_list.append(datum)
             
     for bndry_name in bndry_f:
-        bndry = gpd.read_file(os.path.join('..','model_files','MIBoundaryFiles','upstream_basins',bndry_name))
+        bndry = gpd.read_file(os.path.join('..','model_files','boundary_files','upstream_basins',bndry_name))
         bndry.to_crs(crs = 'epsg:5070', inplace = True)
         x_grid, y_grid = np.meshgrid(component['x'], component['y'])
         x_coords = x_grid.flatten()
@@ -137,9 +119,9 @@ def get_basin_components():
         grid_centroids_basin = grid_centroids.clip(bndry)
         grid_centroids_basin.reset_index(drop = True, inplace= True)
 
-        # grid_centroids_basin.to_file(os.path.join('..','model_files','MIBoundaryFiles','upstream_basins','swb_centroids.shp'), index = False)
+        # grid_centroids_basin.to_file(os.path.join('..','model_files','boundary_files','upstream_basins','swb_centroids.shp'), index = False)
         
-        # grid_centroids_basin = gpd.read_file(os.path.join('..','model_files','MIBoundaryFiles','upstream_basins','swb_centroids.shp'))
+        # grid_centroids_basin = gpd.read_file(os.path.join('..','model_files','boundary_files','upstream_basins','swb_centroids.shp'))
         
         basinwide_component_coord = []
         for coordinate in grid_centroids_basin['geometry']:
