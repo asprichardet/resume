@@ -35,29 +35,16 @@ import os
 import geopandas as gpd
 import xarray as xr
 from pathlib import Path
-import pyemu
-import shutil
-import pyproj
-import rasterio as rio
-from rasterio.merge import merge
-import matplotlib.pyplot as plt
-from matplotlib import colors
-from scipy.io import netcdf
-import rioxarray as rxr
-import matplotlib.patches as mpatches
 from pyproj import Transformer, Proj, transform, CRS
-from rasterio.mask import mask
-from shapely.geometry import box
 import shapely
-import dataretrieval.nwis as nwis
 import dataretrieval.nldi as nldi
 
 # File directories
-o_dir = Path('../model_files/swb_out')
+o_dir = Path('../model_files/out')
 compare_dir = Path('../comparison_data')
 gis_dir = Path( '../model_files/rasters')
 data_dir = Path(o_dir)
-export_dir = Path('../comparison_data/swb_output_sums')
+export_dir = Path('../comparison_data/wb_output_sums')
 
 
 #get rows, and columns from subset ascii files
@@ -67,16 +54,14 @@ row = int(asc_lines[1].split()[1])
 file_extension = f'__1995-01-01_to_1995-12-31__{row}_by_{col}.nc'
 model_name = 'michigan_daymet_'
 
-# Reading in netcdf file names
+# Reading in water balance netcdf file names
 recharge = data_dir / f"{model_name}net_infiltration{file_extension}"
 irr = data_dir / f"{model_name}irrigation{file_extension}"
 gross_prcp = data_dir / f"{model_name}gross_precipitation{file_extension}"
 et = data_dir / f"{model_name}actual_et{file_extension}"
-
-# Extras to look at
 rej_rech = data_dir / f"{model_name}rejected_net_infiltration{file_extension}"
 run = data_dir / f"{model_name}runoff{file_extension}"
-rain = f"{model_name}rainfall{file_extension}"
+rain = f"{model_name}rainfall{file_extension}" 
 
 if os.path.exists(Path('../model_files/boundary_files/upstream_basins')):
     pass
@@ -84,7 +69,7 @@ else:
     os.mkdir(Path('../model_files/boundary_files/upstream_basins'))
                   
 
-#Obtaining upstream basins &  grids
+#Obtaining upstream basin shapefile polygons:
 site1 = '04117500' #Basin 1
 site2 = '04117004' #Basin 2
 site3 = '04118000' #Basin 3
