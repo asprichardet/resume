@@ -48,6 +48,9 @@ import matplotlib.patches as mpatches
 from pyproj import Transformer, Proj, transform, CRS
 from rasterio.mask import mask
 from shapely.geometry import box
+import shapely
+import dataretrieval.nwis as nwis
+import dataretrieval.nldi as nldi
 
 # File directories
 o_dir = Path('../model_files/swb_out')
@@ -64,7 +67,7 @@ row = int(asc_lines[1].split()[1])
 file_extension = f'__1995-01-01_to_1995-12-31__{row}_by_{col}.nc'
 model_name = 'michigan_daymet_'
 
-# SWB file names
+# Reading in netcdf file names
 recharge = data_dir / f"{model_name}net_infiltration{file_extension}"
 irr = data_dir / f"{model_name}irrigation{file_extension}"
 gross_prcp = data_dir / f"{model_name}gross_precipitation{file_extension}"
@@ -85,18 +88,16 @@ else:
 site1 = '04117500' #Basin 1
 site2 = '04117004' #Basin 2
 site3 = '04118000' #Basin 3
+sites = [site1, site2, site3]
 
-basin_1 = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site1}')
-basin_1.to_file(Path('../model_files/boundary_files/upstream_basins/basin_1.shp'))
-
-basin_2 = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site3}')
-basin_2.to_file(Path('../model_files/boundary_files/upstream_basins/basin_2.shp'))
-
-basin_3 = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site2}')
-basin_3.to_file(Path('../model_files/boundary_files/upstream_basins/basin_3.shp'))
+def get_waterbalance_components(site_id_list):
+    x = 1
+    for site_id in site_id_list:
+        basin = nldi.get_basin(feature_source = 'nwissite', feature_id = f'USGS-{site_id}')
+        basin.to_file(Path(f'../model_files/boundary_files/upstream_basins/basin{x}_.shp'))
+        x = x+1
 
 
-def get_waterbalance_components():
     component_list = []
     datum_list = [recharge, irr, gross_prcp, et, rej_rech, run, rain]
     bndry_f = [f for f in os.listdir(os.path.join('..','model_files','boundary_files','upstream_basins')) if f.endswith('basin.shp')]
