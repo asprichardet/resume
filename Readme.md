@@ -151,3 +151,4 @@ def get_waterbalance_components(site_id_list):
         basin_dataframe.insert(0, 'time', pd.Series(component['time']))
 
         basin_dataframe.to_csv(f'../model_files/{bndry_name.rstrip('.shp')}.csv', index = False)
+        print(f'Wrote {bndry_name.rstrip('.shp')} data to csv')
