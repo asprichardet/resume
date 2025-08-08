@@ -3,16 +3,16 @@
 
 # Andrew Richardet - GIS & Data Science Portfolio
 
-Welcome to my GitHub portfolio! Here, you'll find examples of my work in quantitative hydrology, GIS, and data science, showcasing my skills in Python and spatial analysis.
+Welcome to my GitHub portfolio! Here, you'll find examples of my work in quantitative hydrology, GIS, and data analysis, showcasing my skills in Python and spatial analysis.
 
 ## About Me
 
-I am a Hydrologist with a strong background in hydrological modeling, spatial data analysis, and data analysis. I leverage my expertise in Python, GIS software (ArcGIS Pro, QGIS), and statistics to solve complex environmental problems.
+I am a Hydrologist with a strong background in hydrological modeling, spatial data analysis, and data analysis. I leverage my expertise in Python, GIS software (ArcGIS Pro, QGIS), and statistics to solve complex technical and environmental problems.
 
 **Key Skills:**
 
-* Python (Pandas, NumPy, SciPy, GeoPandas, Rasterio, Xarray)
-* Geographic Information Systems (ArcGIS, QGIS)
+* Python (Pandas, NumPy, GDAL, GeoPandas, Rasterio, Xarray)
+* Geographic Information Systems (ArcGIS Pro, QGIS)
 * Watershed Modeling
 * Spatial Data Analysis
 * Data Visualization
@@ -25,6 +25,11 @@ I am a Hydrologist with a strong background in hydrological modeling, spatial da
 
 * **Description:** An analysis of stream health in New Mexico according to the Clean Water Act.
 * **Key Techniques:** GIS cartographic principles.
+
+### 2. Gathering NetCDF Data Within the bounds of a Shapefile
+![NetCDF Representation](Images/swb_net_infil_optimized.gif)
+* **Description:** Developed a Python script that neatly formats all data from a multi-dimensional Network Common Data Form (NetCDF) file, showing groundwater recharge over time, into a comma-separated value output file; along with other water balance values. Script is a part of a larger workflow, a  sample is available below.
+* **Key Techniques:** GIS cartographic principles, Python scripting, data organization.
 
 ## Code Samples
 **Creating a function to sample water balance components from a NetCDF file in the area of an upstream basin:**
