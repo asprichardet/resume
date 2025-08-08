@@ -12,6 +12,7 @@ I am a Hydrologist with a strong background in hydrological modeling, spatial da
 **Key Skills:**
 
 * Python (Pandas, NumPy, GDAL, GeoPandas, Rasterio, Xarray)
+* SQL
 * Geographic Information Systems (ArcGIS Pro, QGIS)
 * Watershed Modeling
 * Spatial Data Analysis
