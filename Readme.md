@@ -7,7 +7,7 @@ Welcome to my GitHub portfolio! Here, you'll find examples of my work in quantit
 
 ## About Me
 
-I am a Hydrologist with a strong background in hydrological modeling, spatial data analysis, and data analysis. I leverage my expertise in Python, GIS software (ArcGIS Pro, QGIS), and statistics to solve complex technical and environmental problems.
+I am a Hydrologist with a strong background in hydrological modeling, spatial data analysis, and programming. I leverage my expertise in Python, GIS software (ArcGIS Pro, QGIS), and statistics to solve complex technical and environmental problems.
 
 **Key Skills:**
 
